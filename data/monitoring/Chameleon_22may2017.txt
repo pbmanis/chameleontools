@@ -1,0 +1,81 @@
+
+Report for Chameleon Vision II with OPO, Manis Lab
+     22 May 2017  11:03:20
+
+             Serial Number  2950                     SN    
+                     Power  2889                     UF    
+           Wavelength (nm)  840                      VW    
+         Relative Humidity  0                        RH    
+          Operating Status  OK                       ST    
+              Automodelock  1                        AMDLK 
+          Cavity Peak Hold  1                        PHLDC 
+           Cavity PZT Mode  0                        PZTMC 
+              Cavity PZT X  1.54                     PZTXC 
+              Cavity PZT Y  3.25                     PZTYC 
+            Pump Peak Hold  0                        PHLDP 
+             PZT Pump Mode  0                        PZTMP 
+         PZT X voltage (V)  2.25                     PZTXP 
+         PZT Y voltage (V)  2.48                     PZTYP 
+               Power Track  Query Error:?PTRK        PTRK  
+                ModeLocked  1                        MDLK  
+              Pump Setting  0.80                     PP    
+             Tuning Status  0                        TS    
+           Search Modelock  1                        SM    
+                     Homed  1                        HM    
+          Stepper Position  Query Error:?STRPOS      STRPOS
+ Average Diode Current (A)  47.02                    C     
+
+       Diode 1 Current (A)  47.25                    D1C   
+       Diode 1 Current (A)  46.79                    D2C   
+           Diode 1 Voltage  1.85                     D1V   
+           Diode 2 Voltate  1.86                     D2V   
+   Diode 1 Temperature (C)  20.24                    D1T   
+   Diode 2 Temperature (C)  23.05                    D2T   
+   Diode 1 Set Temperature  20.24                    D1ST  
+   Diode 2 Set Temperature  23.03                    D2ST  
+        Diode 1 Temp Drive  -1732.02                 D1TD  
+        Diode 2 Temp Drive  -1649.04                 D2TD  
+      Diode 1 Heatsink (C)  33.70                    D1HST 
+         Diode 2 Heat Sink  36.66                    D2HST 
+             Diode 1 Hours  938.52                   D1H   
+             Diode 2 Hours  938.41                   D2H   
+
+ Baseplate Temperature (C)  30.06                    BT    
+  Vanadate Temperature (C)  30.02                    VT    
+  Vanadate Set Temperature  30.00                    VST   
+       LBO Temperature (C)  148.36                   LBOT  
+       LBO Set Temperature  148.40                   LBOST 
+    Etalon Temperature (C)  42.05                    ET    
+    Etalon Set Temperature  42.00                    EST   
+
+            Vanadate Drive  -2538.31                 VD    
+                 LBO Drive  4108.35                  LBOD  
+              Etalon Drive  -1225.93                 ED    
+                LBO Heater  1                        LBOH  
+
+          Light Loop Servo  1                        LRS   
+      Diode 1 Servo Status  1                        D1SS  
+      Diode 2 Servo Status  1                        D2SS  
+     Vanadate Servo Status  1                        VSS   
+          LBO Servo Status  1                        LBOSS 
+       Etalon Servo Status  1                        ESS   
+
+         PZT Control State  Query Error:?PZTS        PZTS  
+     PZT X Cavity Powermap  8.11                     PZTXCM
+     PZT X Cavity Position  -38.53                   PZTXCP
+       PZT X Pump Powermap  8.11                     PZTXPM
+       PZT X Pump Position  -10.04                   PZTXPP
+     PZT Y Cavity Powermap  8.11                     PZTYCM
+     PZT Y Cavity Position  29.86                    PZTYCP
+       PZT Y Pump Powermap  8.11                     PZTYPM
+       PZT Y Pump Position  -0.83                    PZTYPP
+
+                Head Hours  844                      HH    
+          Software Version  8.26,8.26,9.57           SV    
+                  Baudrate  Query Error:?MB          MB    
+           Battery Voltage  13.08                    BV    
+Faults: CHAMELEON> 0
+
+Fault History: 
+   CHAMELEON> 36,30
+
