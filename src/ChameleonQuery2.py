@@ -5,7 +5,11 @@ Read chameleon parameters and print to screen
 
 Pbmanis 2017-2020 
 UNC Chapel Hill
+It is important to keep compatibility with Python 2.7 for now.
+
 """
+import os
+import sys
 import serial
 import argparse
 # from pathlib import Path
@@ -301,6 +305,10 @@ class Coherent(object):
 
 class ChameleonScan():
     def __init__(self, port=8, baud=19200):
+        self.port = port
+        self.baud = baud
+    
+    def scan(self):
         C = Coherent(port=port, baud=baud)
         wmin, wmax = C.getWavelengthRange()
         wlmin = np.min((wmin, wmax))
@@ -323,13 +331,51 @@ class ChameleonScan():
         print('='*60)
         df = pd.DataFrame({'Date': mtime, 'Wavelength': truewavelength, 'Power': power})
         finishtime = datetime.datetime.now().strftime("%d-%b-%Y_%H-%M-%S")
-        df.to_csv('ChameleonScan_'+finishtime+'.csv')
+        fn = os.path.join('data', 'scans', 'ChameleonScan_'+finishtime+'.csv')
+        df.to_csv(fn)
+        self.filename = fn
+        self.data = df
+        self.showscan()
+        
+    def showscan(self):
         fig, ax = mpl.subplots(1,1)
-        ax.plot(truewavelength, power, 'ko-')
+        wl = self.data['Wavelength']
+        power = self.data['Power']
+        ax.plot(wl, power, 'ko-')
         ax.set_ylim((0, 4000.))
-        ax.set_xlim((650., 1200.))
-
+        ax.set_xlim((650., 1100.))
         mpl.show()
+    
+    def allscans(self):
+        datas = os.listdir(os.path.join('data', 'scans'))
+        fig, ax = mpl.subplots(1,1)
+        for i, d in enumerate(datas):
+            fn = datas[int(i)]
+            self.filename = fn
+            self.data = pd.read_csv(os.path.join('data', 'scans', fn))
+            wl = self.data['Wavelength']
+            power = self.data['Power']
+            ax.plot(wl, power,  markersize=4, label=fn.replace('_', '\_'))
+        ax.set_ylim((0, 4000.))
+        ax.set_xlim((650., 1100.))
+        fig.legend(fontsize=6)
+        mpl.show()
+
+    def getdata(self):
+        datas = os.listdir(os.path.join('data', 'scans'))
+        for i, d in enumerate(datas):
+            print(f"{i:d}  {d:s}")
+        n = input("\nSelect a file to read ('q' to quit): ")
+        if n == 'q':
+            exit()
+        n = int(n)
+        if n < 0 or n >= len(datas):
+            exit()
+        fn = datas[int(n)]
+        self.filename = fn
+        self.data = pd.read_csv(os.path.join('data', 'scans', fn))
+        print(self.data.columns)
+        self.showscan( )
 
 
 class ChameleonMonitor():
@@ -337,6 +383,9 @@ class ChameleonMonitor():
         self.port = port
         self.baud = baud
         self.interval = interval
+        self.writeflag = writeflag
+    
+    def monitor(self):
         C = Coherent(port=self.port, baud=self.baud)
         C.setWavelength(800, block=True)
         bt = []
@@ -353,10 +402,11 @@ class ChameleonMonitor():
         start_time = time.time()
         # make a filename for the date/time:
         tnow = datetime.datetime.now()
-        fn = 'ChameleonMon_' + tnow.strftime('%Y.%d.%m_%H.%M.%S') + '.txt'
+        fn0 = 'ChameleonMon_' + tnow.strftime('%Y.%d.%m_%H.%M.%S') + '.txt'
+        fn = os.path.join('data', 'monitoring', fn0)
         print('\nStarting Monitor over time of temperatures and power')
         print('File: %s' % fn)
-        if writeflag:
+        if self.writeflag:
             fh = open(fn, 'w')
             fh.write('t(sec)\tBase(C)\tD1C(A)\tD2C(A)\tD1T(C)\tD2T(C)\tVT(C)\tLBOT(C)\tET(C)\tPower(W)\tWavelength(nm)\n')
             fh.close()
@@ -381,17 +431,61 @@ class ChameleonMonitor():
             tsec.append(t)
             print('{0:6.1f}\t{1:6.2f}\t{2:5.1f}\t{3:5.1f}\t{4:6.1f}\t{5:6.1f}\t{6:7.1f}\t{7:7.1f}\t{8:6.1f}\t{9:5.1f}\t{10:6.0f}'.
                             format(t, bt[-1], diodes[0], diodes[1], dtemps[0], dtemps[1], vt[-1], lbot[-1], et[-1], power[-1], wavelength[-1]))
-            if writeflag:
+            if self.writeflag:
                 fh = open(fn, 'a')
                 fh.write('{0:6.1f}\t{1:6.2f}\t{2:5.1f}\t{3:5.1f}\t{4:6.1f}\t{5:6.1f}\t{6:7.1f}\t{7:7.1f}\t{8:6.1f}\t{9:5.1f}\t{10:6.1f}\n'.
                             format(t, bt[-1], diodes[0], diodes[1], dtemps[0], dtemps[1], vt[-1], lbot[-1], et[-1], power[-1], wavelength[-1]))
                 fh.close()
             while(time.time() - tx) < interval:
                 x = 1
-        mpl.figure()
-        mpl.plot(tsec, bt, 'ro-')
-        mpl.show()
+        self.data = pd.read_table(fn)
+        self.filename = fn0
+        self.showmonitor()
+        
+    def showmonitor(self):
+        f, ax = mpl.subplots(4,1)
+        # print(dir(f))
+        f.set_size_inches((8.5, 6))
+        ax[0].plot(self.data['t(sec)'], self.data['BaseTemp(C)'], 'ro-', markersize=3.5)
+        ax[0].set_xlabel('Time (sec)')
+        ax[0].set_ylabel('Base Temperature(deg C)', fontsize=8)
+        ax[0].set_ylim(20., 45.)
+        
+        ax[1].plot(self.data['t(sec)'], self.data['D1C(A)'], 'ro-', markersize=3.5)
+        ax[1].plot(self.data['t(sec)'], self.data['D2C(A)'], 'bs-', markersize=3.5)
+        ax[1].set_xlabel('Time (sec)')
+        ax[1].set_ylabel('Diode Current (A)', fontsize=8)
+        ax[1].set_ylim(20., 50.)
 
+        ax[2].plot(self.data['t(sec)'], self.data['D1T(C)'], 'ro-', markersize=3.5)
+        ax[2].plot(self.data['t(sec)'], self.data['D2T(C)'], 'bs-', markersize=3.5)
+        ax[2].set_xlabel('Time (sec)')
+        ax[2].set_ylabel('Diode Temp(deg C)', fontsize=8)
+        ax[2].set_ylim(20., 30.)
+        
+        ax[3].plot(self.data['t(sec)'], self.data['Power(W)']/1000., 'ro-', markersize=3.5)
+        ax[3].set_xlabel('Time (sec)')
+        ax[3].set_ylabel('Power (W)', fontsize=8)
+        ax[3].set_ylim(0., 4.0)
+        fn = self.filename.replace('_', '\_')
+        f.suptitle(f"{fn:s}")
+        mpl.show()
+    
+    def getdata(self):
+        datas = os.listdir(os.path.join('data', 'monitoring'))
+        for i, d in enumerate(datas):
+            print(f"{i:d}  {d:s}")
+        n = input("\nSelect a file to read ('q' to quit): ")
+        if n == 'q':
+            exit()
+        n = int(n)
+        if n < 0 or n >= len(datas):
+            exit()
+        fn = datas[int(n)]
+        self.filename = fn
+        self.data = pd.read_table(os.path.join('data', 'monitoring', fn))
+        self.showmonitor()
+        
 class ChameleonInfo(object):
     def __init__(self, port=8, baud=19200):
         self.port = port
@@ -436,18 +530,35 @@ class ChameleonInfo(object):
 
 def main():
     parser = argparse.ArgumentParser('Chameleon Query')
-    parser.add_argument('mode', choices=['info', 'scan', 'monitor', 'test'],
+    parser.add_argument('mode', choices=['info', 'scan', 'monitor', 'test', 'showmon',
+            'showscan', 'allscans'],
         help='Select mode for query')
     args = parser.parse_args()
     # bulk report:
     if args.mode == 'info':
         Ch = ChameleonInfo(port=8, baud=19200)
     elif args.mode == 'scan':
-        ChameleonScan()
+        C = ChameleonScan()
+        C.scan()
     elif args.mode == 'monitor':
-        ChameleonMonitor()
+        C = ChameleonMonitor()
+        C.monitor()
     elif args.mode == 'test':
-        ChameleonMonitor(writeflag=False)
+        C = ChameleonMonitor(writeflag=False)
+        C.monitor()
+    elif args.mode == 'showmon':
+        C = ChameleonMonitor(writeflag=False)
+        C.getdata()
+
+    elif args.mode == 'showscan':
+        C = ChameleonScan()
+        C.getdata()
+
+    elif args.mode == 'allscans':
+        C = ChameleonScan()
+        C.allscans()
+        
+        
     else:
         print('Mode: %s not implemented yet', mode)
 
