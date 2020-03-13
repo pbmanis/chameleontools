@@ -1,0 +1,73 @@
+Report for Chameleon Vision II with OPO, Manis Lab
+Generated on: 02020.13.03_10.42.38
+             Serial Number  8157                     SN    
+                     Power  451                      UF    
+           Wavelength (nm)  1070                     VW    
+         Relative Humidity  2                        RH    
+          Operating Status  OK                       ST    
+              Automodelock  1                        AMDLK 
+          Cavity Peak Hold  1                        PHLDC 
+           Cavity PZT Mode  0                        PZTMC 
+              Cavity PZT X  2.47                     PZTXC 
+              Cavity PZT Y  3.15                     PZTYC 
+            Pump Peak Hold  0                        PHLDP 
+             PZT Pump Mode  0                        PZTMP 
+         PZT X voltage (V)  2.66                     PZTXP 
+         PZT Y voltage (V)  1.99                     PZTYP 
+               Power Track  Query Error:?PTRK        PTRK  
+                ModeLocked  1                        MDLK  
+              Pump Setting  0.80                     PP    
+             Tuning Status  0                        TS    
+           Search Modelock  1                        SM    
+                     Homed  1                        HM    
+          Stepper Position  2349                     STPRPOS
+ Average Diode Current (A)  45.35                    C     
+       Diode 1 Current (A)  45.11                    D1C   
+       Diode 1 Current (A)  45.55                    D2C   
+           Diode 1 Voltage  Query Error:?D1V         D1V   
+           Diode 2 Voltate  Query Error:?D2V         D2V   
+   Diode 1 Temperature (C)  25.60                    D1T   
+   Diode 2 Temperature (C)  22.95                    D2T   
+   Diode 1 Set Temperature  25.60                    D1ST  
+   Diode 2 Set Temperature  22.90                    D2ST  
+        Diode 1 Temp Drive  -977.56                  D1TD  
+        Diode 2 Temp Drive  -1408.93                 D2TD  
+      Diode 1 Heatsink (C)  32.98                    D1HST 
+      Diode 2 Heatsink (C)  35.84                    D2HST 
+             Diode 1 Hours  115.00                   D1H   
+             Diode 2 Hours  115.01                   D2H   
+ Baseplate Temperature (C)  31.23                    BT    
+  Vanadate Temperature (C)  29.99                    VT    
+  Vanadate Set Temperature  30.00                    VST   
+       LBO Temperature (C)  147.81                   LBOT  
+       LBO Set Temperature  147.77                   LBOST 
+    Etalon Temperature (C)  51.05                    ET    
+    Etalon Set Temperature  51.00                    EST   
+            Vanadate Drive  -1757.02                 VD    
+                 LBO Drive  5119.94                  LBOD  
+              Etalon Drive  324.12                   ED    
+                LBO Heater  1                        LBOH  
+          Light Loop Servo  1                        LRS   
+      Diode 1 Servo Status  1                        D1SS  
+      Diode 2 Servo Status  1                        D2SS  
+     Vanadate Servo Status  1                        VSS   
+          LBO Servo Status  1                        LBOSS 
+       Etalon Servo Status  1                        ESS   
+         PZT Control State  Query Error:?PZTS        PZTS  
+                      P =   13.47                    P     
+     PZT X Cavity Powermap  21.62                    PZTXCM
+     PZT X Cavity Position  -1.27                    PZTXCP
+       PZT X Pump Powermap  -62.16                   PZTXPM
+       PZT X Pump Position  6.35                     PZTXPP
+     PZT Y Cavity Powermap  89.19                    PZTYCM
+     PZT Y Cavity Position  25.86                    PZTYCP
+       PZT Y Pump Powermap  4.98                     PZTYPM
+       PZT Y Pump Position  -20.30                   PZTYPP
+                Head Hours  13096                    HH    
+          Software Version  8.65,8.65,9.57           SV    
+                  Baudrate  19200                    B     
+           Battery Voltage  Query Error:?BV          BV    
+Faults: 0
+
+Fault History:
+    SYSTEM OK

@@ -3,7 +3,7 @@ from __future__ import print_function
 """
 Read chameleon parameters and print to screen
 
-Pbmanis 2017-2020 
+Pbmanis 2017-2020
 UNC Chapel Hill
 It is important to keep compatibility with Python 2.7 for now.
 
@@ -81,7 +81,12 @@ class Coherent(object):
         self.port = port-1  # map it for us
         self.baud = baud
         print(self.port)
-        self.sp = serial.Serial(f"COM{int(self.port):d}", baudrate=self.baud, bytesize=serial.EIGHTBITS)
+        try:
+            assert 1==0
+            self.sp = serial.Serial("COM{0:d}".format(int(self.port)), baudrate=self.baud, bytesize=serial.EIGHTBITS)
+        except:
+            self.sp = serial.Serial(int(self.port), baudrate=self.baud, bytesize=serial.EIGHTBITS)
+
         time.sleep(0.3)  ## Give devices a moment to chill after opening the serial line.
         self.write("PROMPT=0\r\n")
         self.readPacket()
@@ -307,13 +312,13 @@ class ChameleonScan():
     def __init__(self, port=8, baud=19200):
         self.port = port
         self.baud = baud
-    
+
     def scan(self):
-        C = Coherent(port=port, baud=baud)
+        C = Coherent(port=self.port, baud=self.baud)
         wmin, wmax = C.getWavelengthRange()
         wlmin = np.min((wmin, wmax))
         wlmax = np.max((wmin, wmax))
-        wavelength = np.arange(wlmin, wlmax, 0)
+        wavelength = np.arange(wlmin, wlmax, 10)
         truewavelength = np.zeros_like(wavelength)
         mtime = [0]*len(wavelength)
         power = np.zeros_like(wavelength)
@@ -336,7 +341,7 @@ class ChameleonScan():
         self.filename = fn
         self.data = df
         self.showscan()
-        
+
     def showscan(self):
         fig, ax = mpl.subplots(1,1)
         wl = self.data['Wavelength']
@@ -345,7 +350,7 @@ class ChameleonScan():
         ax.set_ylim((0, 4000.))
         ax.set_xlim((650., 1100.))
         mpl.show()
-    
+
     def allscans(self):
         datas = os.listdir(os.path.join('data', 'scans'))
         fig, ax = mpl.subplots(1,1)
@@ -364,7 +369,7 @@ class ChameleonScan():
     def getdata(self):
         datas = os.listdir(os.path.join('data', 'scans'))
         for i, d in enumerate(datas):
-            print(f"{i:d}  {d:s}")
+            print("{0:d}  {1:s}".format(i, d))
         n = input("\nSelect a file to read ('q' to quit): ")
         if n == 'q':
             exit()
@@ -384,7 +389,7 @@ class ChameleonMonitor():
         self.baud = baud
         self.interval = interval
         self.writeflag = writeflag
-    
+
     def monitor(self):
         C = Coherent(port=self.port, baud=self.baud)
         C.setWavelength(800, block=True)
@@ -441,7 +446,7 @@ class ChameleonMonitor():
         self.data = pd.read_table(fn)
         self.filename = fn0
         self.showmonitor()
-        
+
     def showmonitor(self):
         f, ax = mpl.subplots(4,1)
         # print(dir(f))
@@ -450,7 +455,7 @@ class ChameleonMonitor():
         ax[0].set_xlabel('Time (sec)')
         ax[0].set_ylabel('Base Temperature(deg C)', fontsize=8)
         ax[0].set_ylim(20., 45.)
-        
+
         ax[1].plot(self.data['t(sec)'], self.data['D1C(A)'], 'ro-', markersize=3.5)
         ax[1].plot(self.data['t(sec)'], self.data['D2C(A)'], 'bs-', markersize=3.5)
         ax[1].set_xlabel('Time (sec)')
@@ -462,19 +467,19 @@ class ChameleonMonitor():
         ax[2].set_xlabel('Time (sec)')
         ax[2].set_ylabel('Diode Temp(deg C)', fontsize=8)
         ax[2].set_ylim(20., 30.)
-        
+
         ax[3].plot(self.data['t(sec)'], self.data['Power(W)']/1000., 'ro-', markersize=3.5)
         ax[3].set_xlabel('Time (sec)')
         ax[3].set_ylabel('Power (W)', fontsize=8)
         ax[3].set_ylim(0., 4.0)
         fn = self.filename.replace('_', '\_')
-        f.suptitle(f"{fn:s}")
+        f.suptitle("{0:s}".format(fn))
         mpl.show()
-    
+
     def getdata(self):
         datas = os.listdir(os.path.join('data', 'monitoring'))
         for i, d in enumerate(datas):
-            print(f"{i:d}  {d:s}")
+            print("{0:d}  {1:s}".format(i, d))
         n = input("\nSelect a file to read ('q' to quit): ")
         if n == 'q':
             exit()
@@ -485,11 +490,12 @@ class ChameleonMonitor():
         self.filename = fn
         self.data = pd.read_table(os.path.join('data', 'monitoring', fn))
         self.showmonitor()
-        
+
 class ChameleonInfo(object):
-    def __init__(self, port=8, baud=19200):
+    def __init__(self, writeflag=True, port=8, baud=19200):
         self.port = port
         self.baud = baud
+        self.writeflag = writeflag
        # self.open_chameleon()
         print('\nInformation on Laser\n')
         self.bulk_report()
@@ -506,26 +512,46 @@ class ChameleonInfo(object):
 
 
     def bulk_report(self):
+        report_txt = []
         self.open_chameleon()
-        print ('\nReport for Chameleon Vision II with OPO, Manis Lab')
-        print ('     ' + time.strftime("%d %B %Y  %H:%M:%S")+'\r\n')
+        tnow = datetime.datetime.now()
+        fn0 = 'ChameleonInfo_' + tnow.strftime('%Y.%d.%m_%H.%M.%S') + '.txt'
+        fn = os.path.join('data', 'monitoring', fn0)
+        print('Info report saving to File: %s' % fn)
 
+        print ('\nReport for Chameleon Vision II with OPO, Manis Lab')
+        print ('     ' + tnow.strftime("%d %B %Y  %H:%M:%S")+'\r\n')
+        if self.writeflag:
+            fh = open(fn, 'w')
+            fh.write('Report for Chameleon Vision II with OPO, Manis Lab\n')
+            fh.write('Generated on: 0'+tnow.strftime('%Y.%d.%m_%H.%M.%S')+'\n')
+            fh.close()
         for q in queries.keys():
             if q[0] == '-':
                 print('')
             else:
                 self.chameleon_serial.write(b'?'+q+'\r\n')
                 r = self.chameleon_serial.readline()
-                print('%26s  %-24s %-6s' % (queries[q], r[11:].strip(), q))
+                print('%26s  %-24s %-6s' % (queries[q], r.strip(), q))
+                if self.writeflag:
+                    fh = open(fn, 'a')
+                    fh.write('%26s  %-24s %-6s\n' % (queries[q], r.strip(), q))
+                    fh.close()
 
         self.chameleon_serial.write(b'?F\r\n')
         r = self.chameleon_serial.readline()
         print('Faults: %s' % r)
         print('Fault History: ')
         self.chameleon_serial.write(b'?FH\r\n')
-        r = self.chameleon_serial.readline()
-        print('   %s' % r)
+        r2 = self.chameleon_serial.readline()
+        print('   %s' % r2)
         self.close_chameleon()
+        if self.writeflag:
+            fh = open(fn, 'a')
+            fh.write('Faults: %s\n' % r)
+            fh.write('Fault History:\n')
+            fh.write('    %s' % r2)
+            fh.close()
 
 
 def main():
@@ -557,11 +583,11 @@ def main():
     elif args.mode == 'allscans':
         C = ChameleonScan()
         C.allscans()
-        
-        
+
+
     else:
         print('Mode: %s not implemented yet', mode)
 
-    
+
 if __name__ == '__main__':
     main()
