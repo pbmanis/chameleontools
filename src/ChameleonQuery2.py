@@ -19,53 +19,72 @@ from collections import OrderedDict
 import time
 import numpy as np
 import matplotlib
-matplotlib.use('Qt4Agg')
+matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as mpl
 import pandas as pd
 
 
-queries = OrderedDict([('SN', 'Serial Number'), ('UF', 'Power'),  ('VW', 'Wavelength (nm)'),
-        ('RH', 'Relative Humidity'),  ('ST', 'Operating Status'), ('AMDLK', 'Automodelock'),
-        ('PHLDC', 'Cavity Peak Hold'), ('PZTMC', 'Cavity PZT Mode'),
-        ('PZTXC', 'Cavity PZT X'), ('PZTYC', 'Cavity PZT Y'), ('PHLDP', 'Pump Peak Hold'), ('PZTMP', 'PZT Pump Mode'),
-        ('PZTXP', 'PZT X voltage (V)'), ('PZTYP', 'PZT Y voltage (V)'), ('PTRK', 'Power Track'),
-        ('MDLK', 'ModeLocked'), ('PP', 'Pump Setting'), ('TS', 'Tuning Status'), ('SM', 'Search Modelock'),
-        ('HM', 'Homed'),
-        ('STPRPOS', 'Stepper Position'),
-        ('C', 'Average Diode Current (A)'),
-        ('-1', ''),
-        ('D1C', 'Diode 1 Current (A)'), ('D2C', 'Diode 1 Current (A)'),
-        ('D1V', 'Diode 1 Voltage'), ('D2V', 'Diode 2 Voltate'),
-        ('D1T', 'Diode 1 Temperature (C)'), ('D2T', 'Diode 2 Temperature (C)'),
-        ('D1ST', 'Diode 1 Set Temperature'), ('D2ST', 'Diode 2 Set Temperature'),
-        ('D1TD', 'Diode 1 Temp Drive'), ('D2TD', 'Diode 2 Temp Drive'),
-        ('D1HST', 'Diode 1 Heatsink (C)'), ('D2HST', 'Diode 2 Heatsink (C)'),
-        ('D1H', 'Diode 1 Hours'), ('D2H', 'Diode 2 Hours'),
-        ('-0', ''),
-        ('BT', 'Baseplate Temperature (C)'),
-        ('VT', 'Vanadate Temperature (C)'), ('VST', 'Vanadate Set Temperature'),
-        ('LBOT', 'LBO Temperature (C)'),  ('LBOST', 'LBO Set Temperature'),
-        ('ET', 'Etalon Temperature (C)'), ('EST', 'Etalon Set Temperature'),
+queries = OrderedDict([
+        ('SN', ['Serial Number', ""]), 
+        ('UF', ['Power', "mW"]), 
+        ('VW', ['Wavelength', "nm"]),
+        ("ALIGN",[ "Alignment Mode", ""]),
+        ("ALIGNP",[ "Alignment Power", "mW"]) ,
+        ("ALIGNW",[ "Alignment Wavelength", "nm"]),
+        ('RH', ['Relative Humidity', '%']), 
+        ('ST', ['Operating Status', ""]), 
+        ('AMDLK', ['Automodelock', ""]),
+        ('PHLDC', ['Cavity Peak Hold', ""]), 
+        ('PZTMC', ['Cavity PZT Mode', ""]),
+        ('PZTXC', ['Cavity PZT X', ""]), 
+        ('PZTYC', ['Cavity PZT Y', ""]),
+         ('PHLDP',[ 'Pump Peak Hold', ""]), 
+         ('PZTMP', ['PZT Pump Mode', ""]),
+        ('PZTXP', ['PZT X voltage', "V"]), 
+        ('PZTYP', ['PZT Y voltage', "V"]), 
+        ('PTRK', ['Power Track', ""]),
+        ('MDLK', ['ModeLocked', ""]), 
+        ('PP', ['Pump Setting', ""]),
+        ('TS', ['Tuning Status', ""]), 
+        ('SM', ['Search Modelock', ""]),
+        ('HM', ['Homed', ""]),
+        ('STPRPOS',[ 'Stepper Position', "counts"]),
+        ('C', ['Average Diode Current', "A"]),
+        ('-1', ['', '']),
+        ('D1C',[ 'Diode 1 Current', "A"]), ('D2C', ['Diode 1 Current', "A"]),
+        ('D1V', ['Diode 1 Voltage', "V"]), ('D2V', ['Diode 2 Voltage', "V"]),
+        ('D1T', ['Diode 1 Temperature', "degC"]), ('D2T', ['Diode 2 Temperature', "degC"]),
+        ('D1ST', ['Diode 1 Set Temperature', "degC"]), ('D2ST', ['Diode 2 Set Temperature', "degC"]),
+        ('D1TD', ['Diode 1 Temp Drive', '']), ('D2TD', ['Diode 2 Temp Drive', '']),
+        ('D1HST', ['Diode 1 Heatsink', "degC"]), ('D2HST', ['Diode 2 Heatsink', "degC"]),
+        ('D1H', ['Diode 1 Hours', '']), ('D2H', ['Diode 2 Hours', '']),
+        ('-0', ['', '']),
+        ('BT', ['Baseplate Temperature', "degC"]),
+        ('VT', ['Vanadate Temperature', "degC"]), ('VST', ['Vanadate Set Temperature', "degC"]),
+        ('LBOT', ['LBO Temperature', "degC"]),  ('LBOST', ['LBO Set Temperature', "degC"]),
+        ('ET', ['Etalon Temperature', "degC"]), ('EST', ['Etalon Set Temperature', "degC"]),
 
-        ('-2', ''),
-        ('VD', 'Vanadate Drive'), ('LBOD', 'LBO Drive'),
-        ('ED', 'Etalon Drive'),
-        ('LBOH', 'LBO Heater'),
-        ('-3', ''),
-        ('LRS', 'Light Loop Servo'), ('D1SS', 'Diode 1 Servo Status'), ('D2SS', 'Diode 2 Servo Status'),
-        ('VSS', 'Vanadate Servo Status'),
-        ('LBOSS', 'LBO Servo Status'), ('ESS', 'Etalon Servo Status'),
-        ('-4', ''),
-        ('PZTS', 'PZT Control State'),
-        ('P', 'P = '),
-        ('PZTXCM', 'PZT X Cavity Powermap'), ('PZTXCP', 'PZT X Cavity Position'),
-        ('PZTXPM', 'PZT X Pump Powermap'), ('PZTXPP', 'PZT X Pump Position'),
-        ('PZTYCM', 'PZT Y Cavity Powermap'), ('PZTYCP', 'PZT Y Cavity Position'),
-        ('PZTYPM', 'PZT Y Pump Powermap'), ('PZTYPP', 'PZT Y Pump Position'),
-        ('-5', ''),
-        ('HH', 'Head Hours'),
-        ('SV', 'Software Version'), ('B', 'Baudrate'),
-        ('BV', 'Battery Voltage'),  ])
+        ('-2',[ '', '']),
+        ('VD',[ 'Vanadate Drive', ""]), ('LBOD', ['LBO Drive', ""]),
+        ('ED', ['Etalon Drive', '']),
+        ('LBOH',[ 'LBO Heater', '']),
+        ('-3', ['', '']),
+        ('LRS', ['Light Loop Servo', '']),
+         ('D1SS', ['Diode 1 Servo Status', '']), ('D2SS', ['Diode 2 Servo Status', '']),
+        ('VSS', ['Vanadate Servo Status', '']),
+        ('LBOSS', ['LBO Servo Status', '']), ('ESS', ['Etalon Servo Status', '']),
+        ('-4', ['', '']),
+        ('PZTS', ['PZT Control State', '']),
+        ('P', ['P = ', '']),
+        ('PZTXCM', ['PZT X Cavity Powermap', '']), ('PZTXCP', ['PZT X Cavity Position', '']),
+        ('PZTXPM',[ 'PZT X Pump Powermap', '']), ('PZTXPP', ['PZT X Pump Position', '']),
+        ('PZTYCM', ['PZT Y Cavity Powermap', '']), ('PZTYCP', ['PZT Y Cavity Position', '']),
+        ('PZTYPM', ['PZT Y Pump Powermap', '']), ('PZTYPP', ['PZT Y Pump Position', '']),
+        ('-5', ['', '']),
+        ('HH', ['Head Hours', '']),
+        ('SV', ['Software Version', '']), ('B', ['Baudrate', '']),
+        ('BV', ['Battery Voltage', 'V']), 
+        ])
 
 
 class TimeoutError(Exception):
@@ -78,22 +97,33 @@ class Coherent(object):
         """
         port: serial COM port (0==COM1, 1==COM2, ...)
         """
-        self.port = port-1  # map it for us
+        self.port = port  # map it for us
         self.baud = baud
         print(self.port)
-        try:
-            assert 1==0
-            self.sp = serial.Serial("COM{0:d}".format(int(self.port)), baudrate=self.baud, bytesize=serial.EIGHTBITS)
-        except:
-            self.sp = serial.Serial(int(self.port), baudrate=self.baud, bytesize=serial.EIGHTBITS)
+        self.open_chameleon()
+        # try:
+        #     # assert 1==0
+        #     self.chameleon_serial = serial.Serial("COM{0:d}".format(int(self.port)), baudrate=self.baud, bytesize=serial.EIGHTBITS)
+        # except:
+        #     self.chameleon_serial = serial.Serial(int(self.port), baudrate=self.baud, bytesize=serial.EIGHTBITS)
 
         time.sleep(0.3)  ## Give devices a moment to chill after opening the serial line.
-        self.write("PROMPT=0\r\n")
-        self.readPacket()
-        self.write("ECHO=0\r\n")
-        self.readPacket()
-        self.write("HEARTBEAT=0\r\n")
-        self.readPacket()
+        # self.write(b"PROMPT=0\r\n")
+        # self.readPacket()
+        # self.write(b"ECHO=0\r\n")
+        # self.readPacket()
+        # self.write(b"HEARTBEAT=0\r\n")
+        # self.readPacket()
+        print("Connected to Chameleon Vision II")
+
+    def open_chameleon(self):
+        self.chameleon_serial = serial.Serial('COM%d' % self.port, self.baud, timeout=2)
+        self.chameleon_serial.write(b'E=0\r\n')  # turn off echo
+        self.chameleon_serial.readline()  # get the incoming line
+
+    def close_chameleon(self):
+        self.chameleon_serial.close()
+        self.chameleon_serial = None
 
     def getPower(self):
         v = self['UF']
@@ -166,6 +196,7 @@ class Coherent(object):
                 if not self.isTuning():
                     break
                 time.sleep(0.1)
+                print("still tuning")
 
     def getWavelengthRange(self):
         return float(self['TMIN']), float(self['TMAX'])
@@ -199,12 +230,12 @@ class Coherent(object):
         """
         set GDD curve to curve 0 (no dispersion)
         """
-        self['GDDCURVE'] = 0
+        self['GDDCURVE'] =b'0'
 
 
     def isTuning(self):
         """Returns True if the laser is currently tuning its wavelength"""
-        return self['TS'] != '0'
+        return self['TS'] != b'0'
 
     def getShutter(self):
         """Return True if the shutter is open."""
@@ -225,14 +256,16 @@ class Coherent(object):
 
     def __getitem__(self, arg):  ## request a single value from the laser
         #print "write", arg
-        self.write("?%s\r\n" % arg)
+        cmd = "?%s\r\n" % arg
+        self.write(cmd)
         ret = self.readPacket()
-        #print "   return:", ret
+        # print(f"getitem: cmd: {cmd:s}   return: {str(ret):s}")
         return ret
 
     def __setitem__(self, arg, val):  ## set a single value on the laser
         #print "write", arg, val
-        self.write("%s=%s\r\n" % (arg,str(val)))
+        cmd = "%s=%s\r\n" % (arg,str(val))
+        self.write(cmd)
         ret = self.readPacket()
         #print "   return:", ret
         return ret
@@ -242,22 +275,25 @@ class Coherent(object):
         time.sleep(0.1)
         d += self.read()
         if len(d) > 0:
-            print("Sutter MP285: Warning: tossed data ", repr(d))
+            print("Chameleon: Warning: tossed data ", repr(d))
         return d
 
     def read(self):
         ## read all bytes waiting in buffer; non-blocking.
-        n = self.sp.inWaiting()
-        if n > 0:
-            return self.sp.read(n)
-        return ''
+        # n = self.chameleon_serial.inWaiting()
+        # if n > 0:
+        data = str(self.chameleon_serial.readline())
+        # print("r: ", data)
+        return data
+    # return ''
 
     def write(self, data):
         self.read()  ## always empty buffer before sending command
-        self.sp.write(data)
+        # print('w data: ', data)
+        self.chameleon_serial.write(bytes(data, 'utf-8'))
 
     def close(self):
-        self.sp.close()
+        self.chameleon_serial.close()
 
     #def raiseError(self, errVals):
         ### errVals should be list of error codes
@@ -277,18 +313,18 @@ class Coherent(object):
         ## If expect is >0, then try to get a packet of that length, ignoring CRLF within that data
         ## if block is False, then return immediately if no data is available.
         start = time.time()
-        s = ''
+        s = b''
         errors = []
         packets = []
         while True:
-            s += self.read()
+            s += self.chameleon_serial.read()
             #print "read:", repr(s)
             if not block and len(s) == 0:
                 return
 
             while len(s) > 0:  ## pull packets out of s one at a time
-                if '\r\n' in s[expect:]:
-                    i = expect + s[expect:].index('\r\n')
+                if b'\r\n' in s[expect:]:
+                    i = expect + s[expect:].index(b'\r\n')
                     packets.append(s[:i])
                     expect = 0
                     s = s[i+2:]
@@ -297,7 +333,7 @@ class Coherent(object):
 
             if len(s) == 0:
                 if len(packets) == 1:
-                    if 'Error' in packets[0]:
+                    if b'Error' in packets[0]:
                         raise Exception(packets[0])
                     return packets[0]   ## success
                 if len(packets) > 1:
@@ -309,12 +345,12 @@ class Coherent(object):
 
 
 class ChameleonScan():
-    def __init__(self, port=8, baud=19200):
+    def __init__(self, port=5, baud=19200):
         self.port = port
         self.baud = baud
 
     def scan(self):
-        C = Coherent(port=self.port, baud=self.baud)
+        C = Coherent(port=self.port, baud=self.baud)  # opens as well
         wmin, wmax = C.getWavelengthRange()
         wlmin = np.min((wmin, wmax))
         wlmax = np.max((wmin, wmax))
@@ -332,7 +368,7 @@ class ChameleonScan():
             truewavelength[i] = C.getWavelength()
             mtime[i] = datetime.datetime.now().strftime("%d-%b-%Y %H:%M:%S")
             print('{0:4.0f}  {1:4.0f}  {2:5.3f}'.format(wl, truewavelength[i], power[i]))
-        C.close()
+        C.close_chameleon()
         print('='*60)
         df = pd.DataFrame({'Date': mtime, 'Wavelength': truewavelength, 'Power': power})
         finishtime = datetime.datetime.now().strftime("%d-%b-%Y_%H-%M-%S")
@@ -443,6 +479,7 @@ class ChameleonMonitor():
                 fh.close()
             while(time.time() - tx) < interval:
                 x = 1
+        C.close_chameleon()
         self.data = pd.read_table(fn)
         self.filename = fn0
         self.showmonitor()
@@ -530,15 +567,15 @@ class ChameleonInfo(object):
             if q[0] == '-':
                 print('')
             else:
-                self.chameleon_serial.write(b'?'+q+'\r\n')
+                self.chameleon_serial.write(bytes('?'+q+'\r\n', 'utf8'))
                 r = self.chameleon_serial.readline()
-                print('%26s  %-24s %-6s' % (queries[q], r.strip(), q))
+                report = f"{queries[q][0]:>26s}  {r.decode('utf-8').strip():<24s} {queries[q][1]:<5s} {q:<6s}"
+                print(report)
                 if self.writeflag:
                     fh = open(fn, 'a')
-                    fh.write('%26s  %-24s %-6s\n' % (queries[q], r.strip(), q))
+                    fh.write(report)
                     fh.close()
 
-        self.chameleon_serial.write(b'?F\r\n')
         r = self.chameleon_serial.readline()
         print('Faults: %s' % r)
         print('Fault History: ')
@@ -548,9 +585,9 @@ class ChameleonInfo(object):
         self.close_chameleon()
         if self.writeflag:
             fh = open(fn, 'a')
-            fh.write('Faults: %s\n' % r)
+            fh.write('Faults: %s\n' % str(r))
             fh.write('Fault History:\n')
-            fh.write('    %s' % r2)
+            fh.write('    %s' % str(r2))
             fh.close()
 
 
@@ -562,12 +599,12 @@ def main():
     args = parser.parse_args()
     # bulk report:
     if args.mode == 'info':
-        Ch = ChameleonInfo(port=8, baud=19200)
+        Ch = ChameleonInfo(port=5, baud=19200)
     elif args.mode == 'scan':
-        C = ChameleonScan()
+        C=ChameleonScan(port=5, baud=19200)
         C.scan()
     elif args.mode == 'monitor':
-        C = ChameleonMonitor()
+        C = ChameleonMonitor(port=5)
         C.monitor()
     elif args.mode == 'test':
         C = ChameleonMonitor(writeflag=False)
