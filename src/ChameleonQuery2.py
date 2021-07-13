@@ -11,6 +11,7 @@ It is important to keep compatibility with Python 2.7 for now.
 import os
 import sys
 import serial
+from typing import Union
 import argparse
 # from pathlib import Path
 import struct
@@ -26,6 +27,7 @@ import pandas as pd
 
 queries = OrderedDict([
         ('SN', ['Serial Number', ""]), 
+        ('L', ["Status", "0=Off(standby), 1=On, 2=Off due to fault"]),
         ('UF', ['Power', "mW"]), 
         ('VW', ['Wavelength', "nm"]),
         ("ALIGN",[ "Alignment Mode", ""]),
@@ -47,7 +49,6 @@ queries = OrderedDict([
         ('PP', ['Pump Setting', ""]),
         ('TS', ['Tuning Status', ""]), 
         ('SM', ['Search Modelock', ""]),
-        ('HM', ['Homed', ""]),
         ('STPRPOS',[ 'Stepper Position', "counts"]),
         ('C', ['Average Diode Current', "A"]),
         ('-1', ['', '']),
@@ -80,10 +81,18 @@ queries = OrderedDict([
         ('PZTXPM',[ 'PZT X Pump Powermap', '']), ('PZTXPP', ['PZT X Pump Position', '']),
         ('PZTYCM', ['PZT Y Cavity Powermap', '']), ('PZTYCP', ['PZT Y Cavity Position', '']),
         ('PZTYPM', ['PZT Y Pump Powermap', '']), ('PZTYPP', ['PZT Y Pump Position', '']),
-        ('-5', ['', '']),
+        ('-5', ["", ""]),
+        ('COMP', ['COMP enabled', '']),
+        ('HM', ['Tuning motor Homed', '']),
+        ('HMCOMP', ['HMCOMP (homed)', '']),
+        ('GDD', ['GDD Seeting', '']),
+
+        ('-6', ['', '']),
         ('HH', ['Head Hours', '']),
         ('SV', ['Software Version', '']), ('B', ['Baudrate', '']),
         ('BV', ['Battery Voltage', 'V']), 
+        ('F', ["Active Faults", '']),
+        ('FH', ["Fault History", '']),
         ])
 
 
@@ -99,7 +108,7 @@ class Coherent(object):
         """
         self.port = port  # map it for us
         self.baud = baud
-        print(self.port)
+        print("set port to: ", self.port)
         self.open_chameleon()
         # try:
         #     # assert 1==0
@@ -254,6 +263,21 @@ class Coherent(object):
     def getAlignment(self):
         return self['ALIGN']
 
+    def setHMCOMP(self, val):
+        val = int(val)
+        if val in [0, 1]:
+            self['HMCOMP'] = val
+            print(f'set hmcomp to {val:d}')
+
+    def send_any_cmd(self, cmd, val=None):
+        if val is None or val=="":
+            print("getting value")
+            return self[cmd]
+        else:
+            print("setting value")
+            self[cmd] = val
+        return(self[cmd])
+
     def __getitem__(self, arg):  ## request a single value from the laser
         #print "write", arg
         cmd = "?%s\r\n" % arg
@@ -343,6 +367,27 @@ class Coherent(object):
             if time.time() - start > timeout:
                 raise TimeoutError("Timeout while waiting for response. (Data so far: %s)" % (repr(s)))
 
+class SetComp():
+    def __init__(self, port=5, baud=19200):
+        self.port = port
+        self.baud = baud
+
+    def setHMCOMP(self, writeflag=False):
+        C = Coherent(port=self.port, baud=self.baud)  # opens as well
+        C.setHMCOMP(1)
+        C.close()
+
+class SendCmd():
+    def __init__(self, port=5, baud=19200):
+        self.port = port
+        self.baud = baud
+
+    def send_cmd(self, cmd:str, val:Union[str, int, float, None] = None, writeflag=False):
+        print("sending command: ", cmd)
+        C = Coherent(port=self.port, baud=self.baud)  # opens as well
+        ret = C.send_any_cmd(cmd, val)
+        C.close()
+        return ret
 
 class ChameleonScan():
     def __init__(self, port=5, baud=19200):
@@ -528,13 +573,14 @@ class ChameleonMonitor():
         self.data = pd.read_table(os.path.join('data', 'monitoring', fn))
         self.showmonitor()
 
+
 class ChameleonInfo(object):
     def __init__(self, writeflag=True, port=8, baud=19200):
         self.port = port
         self.baud = baud
         self.writeflag = writeflag
        # self.open_chameleon()
-        print('\nInformation on Laser\n')
+        print(f"\nInformation from Chameleon Laser on port: COM{self.port:d} at baudrate: {self.baud:d}")
         self.bulk_report()
        # self.close_chameleon()
 
@@ -556,12 +602,12 @@ class ChameleonInfo(object):
         fn = os.path.join('data', 'monitoring', fn0)
         print('Info report saving to File: %s' % fn)
 
-        print ('\nReport for Chameleon Vision II with OPO, Manis Lab')
+        print ('\nReport for Chameleon Vision II with OPO, Manis Lab\r\n')
         print ('     ' + tnow.strftime("%d %B %Y  %H:%M:%S")+'\r\n')
         if self.writeflag:
             fh = open(fn, 'w')
-            fh.write('Report for Chameleon Vision II with OPO, Manis Lab\n')
-            fh.write('Generated on: 0'+tnow.strftime('%Y.%d.%m_%H.%M.%S')+'\n')
+            fh.write('Report for Chameleon Vision II with OPO, Manis Lab\r\n')
+            fh.write('Generated on: 0'+tnow.strftime('%Y.%d.%m_%H.%M.%S')+'\r\n')
             fh.close()
         for q in queries.keys():
             if q[0] == '-':
@@ -569,7 +615,7 @@ class ChameleonInfo(object):
             else:
                 self.chameleon_serial.write(bytes('?'+q+'\r\n', 'utf8'))
                 r = self.chameleon_serial.readline()
-                report = f"{queries[q][0]:>26s}  {r.decode('utf-8').strip():<24s} {queries[q][1]:<5s} {q:<6s}"
+                report = f"{queries[q][0]:>26s}  {r.decode('utf-8').strip():<24s} {queries[q][1]:<5s} {q:<6s}\r\n"
                 print(report)
                 if self.writeflag:
                     fh = open(fn, 'a')
@@ -585,8 +631,8 @@ class ChameleonInfo(object):
         self.close_chameleon()
         if self.writeflag:
             fh = open(fn, 'a')
-            fh.write('Faults: %s\n' % str(r))
-            fh.write('Fault History:\n')
+            fh.write('Faults: %s\r\n' % str(r))
+            fh.write('Fault History:\r\n')
             fh.write('    %s' % str(r2))
             fh.close()
 
@@ -594,8 +640,12 @@ class ChameleonInfo(object):
 def main():
     parser = argparse.ArgumentParser('Chameleon Query')
     parser.add_argument('mode', choices=['info', 'scan', 'monitor', 'test', 'showmon',
-            'showscan', 'allscans'],
+            'showscan', 'allscans', 'sethmcomp', 'cmd'],
         help='Select mode for query')
+    parser.add_argument('-c', '--command', type=str, dest="command",
+        help="argument for command")
+    parser.add_argument('-v', '--value', type=str, dest="value", default="",
+        help="value for command")
     args = parser.parse_args()
     # bulk report:
     if args.mode == 'info':
@@ -609,6 +659,10 @@ def main():
     elif args.mode == 'test':
         C = ChameleonMonitor(writeflag=False)
         C.monitor()
+    elif args.mode == 'sethmcomp':
+        C = SetComp()
+        C.setHMCOMP(1)
+
     elif args.mode == 'showmon':
         C = ChameleonMonitor(writeflag=False)
         C.getdata()
@@ -621,6 +675,10 @@ def main():
         C = ChameleonScan()
         C.allscans()
 
+    elif args.mode == 'cmd':
+        C = SendCmd()
+        ret = C.send_cmd(args.command, args.value)
+        print("Returned: ", str(ret))
 
     else:
         print('Mode: %s not implemented yet', mode)
